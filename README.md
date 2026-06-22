@@ -18,6 +18,9 @@ Customer ──< System ──< Artifact (binary content + metadata, versioned)
 - Pre-seeded `Customer -> System` hierarchy with read endpoints.
 - API-key protection on write endpoints.
 - Persistence across restarts (Postgres + named Docker volume).
+- Interactive **Swagger / OpenAPI** docs at
+  [http://localhost:4000/docs](http://localhost:4000/docs) (raw spec at
+  [http://localhost:4000/docs-json](http://localhost:4000/docs-json)).
 
 ## Tech Stack & Architecture
 
@@ -27,6 +30,7 @@ Customer ──< System ──< Artifact (binary content + metadata, versioned)
 | Persistence  | PostgreSQL via TypeORM (migrations, no `synchronize`) |
 | Realtime     | SSE through a NestJS `@Sse` endpoint + `EventEmitter2` |
 | Frontend     | Next.js App Router (TypeScript)                    |
+| API docs     | Swagger UI / OpenAPI via `@nestjs/swagger` at `/docs` |
 | Orchestration| Docker Compose                                     |
 
 The backend is organized **by technical responsibility** (role-based layering):
@@ -72,6 +76,7 @@ This starts three services:
 | --------- | ---------------------------- | ------------------------------------ |
 | frontend  | http://localhost:3000        | Pit dashboard                        |
 | backend   | http://localhost:4000        | Artifacts API                        |
+| Swagger   | http://localhost:4000/docs   | Interactive API docs (OpenAPI)       |
 | postgres  | localhost:5436              | Data persisted in the `pgdata` volume |
 
 On startup the backend automatically **runs migrations** and **seeds** the
