@@ -1,0 +1,52 @@
+---
+description: Repo-wide coding standards for every.t session
+alwaysApply: true
+---
+
+# Project standards
+
+Apply to all work in this repository unless a scoped rule overrides.
+
+## Layout
+
+- `backend/` — NestJS + TypeORM API (layered architecture).
+- `frontend/` — Next.js 14 App Router app (React 18, TypeScript).
+- `docker-compose.yml` brings up Postgres + backend + frontend.
+
+## Naming
+
+- Use descriptive names. Avoid single-letter identifiers (i, j, x) except in trivial math.
+- Loop indices should be readable (`index`, `artifactIndex`).
+- Prefer clarity over brevity.
+
+## Architecture
+
+- Minimize scope: smallest correct diff; do not change unrelated code.
+- Reuse existing patterns and the dedicated layer/folder for each concern.
+- Do not over-engineer abstractions for one-off use.
+- Keep the in-process model intact: SSE notifications run over the in-process
+  `@nestjs/event-emitter` bus. Do not reintroduce Redis or extra infra without
+  being asked.
+
+## API response shape
+
+- The backend wraps every success in `{ status, statusCode, message, entity }`
+  via the global `ResponseInterceptor`.
+- Errors are normalized by `AllExceptionsFilter` to
+  `{ statusCode, message, path, timestamp }`.
+- Raw/streaming endpoints (e.g. SSE) must opt out of the success wrapper with
+  `@SkipSuccessWrapper()`.
+- The frontend unwraps `entity` centrally in `lib/api.ts` (`handle`); keep new
+  calls going through that helper.
+
+## Auth
+
+- The only protection is `ApiKeyGuard` (shared secret via the `x-api-key`
+  header), applied to write endpoints with `@UseGuards(ApiKeyGuard)`. There is
+  no JWT/RBAC; read endpoints are public.
+
+## After writing code
+
+- Backend: `cd backend && npm run build` and `npm test`.
+- Frontend: `cd frontend && npm run build` (and `npm run lint`).
+- Only create git commits when the user explicitly asks.

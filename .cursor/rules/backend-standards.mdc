@@ -1,0 +1,58 @@
+---
+description: NestJS backend conventions — layers, interfaces, and checks
+globs: backend/**/*.ts
+alwaysApply: false
+---
+
+# Backend standards
+
+The backend uses a **layered** architecture (not feature modules). Each layer is
+a top-level folder under `backend/src/`.
+
+## Folder responsibilities
+
+| Folder | Holds |
+|--------|-------|
+| `controllers/` | HTTP/SSE routing only; delegate to services |
+| `services/` | business logic |
+| `repositories/` | TypeORM data access (queries) |
+| `entities/` | TypeORM entities |
+| `dto/` | request DTOs + Swagger response DTOs |
+| `interfaces/` | `interface` shapes (`I` prefix), barrel-exported |
+| `guards/`, `decorators/` | auth + cross-cutting |
+| `interceptors/`, `filters/` | response envelope + error normalization |
+| `events/` | event-name constants for the in-process emitter |
+| `modules/` | Nest module wiring |
+| `config/` | typed env configuration |
+| `database/` | migrations, seeds, and the TypeORM data source |
+
+## Interfaces
+
+- Do **not** define `interface` shapes inside `controllers/`, `services/`,
+  `guards/`, `decorators/`, or `modules/`.
+- Put `interface` shapes in `interfaces/*.ts` with an `I` prefix
+  (e.g. `IApiResponse`), and export them from `interfaces/index.ts` — the only
+  barrel in the backend.
+- Other folders are imported by file path using **relative** imports
+  (e.g. `../services/artifacts.service`). No `@/`/`@app` path alias is used.
+
+## Layering
+
+- Controllers: HTTP only. Apply guards (e.g. `@UseGuards(ApiKeyGuard)`) and
+  return plain data — the global `ResponseInterceptor` wraps it. Mark SSE/raw
+  routes with `@SkipSuccessWrapper()`.
+- Services: own business logic; delegate persistence to a `*Repository`.
+- Repositories: own all TypeORM access. Keep version assignment race-safe
+  (retry on the unique-index conflict, as in `ArtifactsRepository`).
+- Auth is a single shared-secret `ApiKeyGuard` (`x-api-key` header); there is no
+  JWT/strategy/RBAC.
+
+## Build & verify
+
+```bash
+cd backend && npm run build   # nest build
+cd backend && npm test        # jest, co-located *.spec.ts
+```
+
+Swagger UI is served at `/docs`; the OpenAPI document is generated at runtime
+(not checked in). There is no ESLint config in this package.

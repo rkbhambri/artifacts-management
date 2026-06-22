@@ -1,0 +1,51 @@
+---
+description: Next.js frontend conventions — structure, interfaces, and checks
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend standards
+
+The frontend is a Next.js 14 App Router app under `frontend/src/`, using the
+`@/` alias (maps to `frontend/src/`).
+
+## File placement
+
+| Kind | Location | Import from |
+|------|----------|-------------|
+| Routes, layout, page, global CSS | `app/` | — |
+| React components | `components/` (flat) | `@/components/...` |
+| API client, hooks, helpers, config | `lib/` | `@/lib/...` |
+| `interface` shapes | `interfaces/*.ts` | `@/interfaces` |
+
+`interfaces/` is barrel-exported via `interfaces/index.ts`; add new public
+interfaces there. Other folders are imported by file path.
+
+## Interfaces & types
+
+- Do not define `interface` shapes inside `components/` or `app/`.
+- Domain interfaces → `interfaces/domain.interface.ts`; API envelope/types →
+  `interfaces/api.interface.ts`; component props →
+  `interfaces/component-props.interface.ts`.
+
+## Data fetching
+
+- All HTTP goes through the helpers in `lib/api.ts`, which use the native
+  `fetch`, unwrap the backend `{ status, entity }` envelope (`handle`), and
+  resolve the base URL via `lib/config.ts` (`API_URL` in the browser,
+  `INTERNAL_API_URL` for server-side requests).
+- Write requests (upload) send the shared secret via the `x-api-key` header.
+  There is no bearer/JWT auth.
+- SSE uses the native `EventSource` via the `useArtifactEvents` hook in `lib/`;
+  no token is attached.
+
+## Styling
+
+- Global CSS with CSS variables in `app/globals.css`. No Tailwind or CSS-in-JS.
+
+## Verification
+
+```bash
+cd frontend && npm run build   # next build (also type-checks)
+cd frontend && npm run lint    # next lint
+```
