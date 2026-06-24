@@ -41,6 +41,7 @@ export class ArtifactsService {
     await this.systemsService.assertExists(systemId);
 
     const name = input.name?.trim() || file.originalname;
+    // It will be used to check the integrity of the file, after that it will be used to get the file from the database.
     const checksum = createHash('sha256').update(file.buffer).digest('hex');
 
     const saved = await this.persistWithVersionRetry({
